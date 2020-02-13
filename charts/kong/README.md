@@ -27,6 +27,7 @@ $ helm install kong/kong
   - [Database](#database)
   - [Runtime package](#runtime-package)
   - [Configuration method](#configuration-method)
+  - [Hybrid mode](#hybrid-mode)
 - [Configuration](#configuration)
   - [Kong Parameters](#kong-parameters)
   - [Ingress Controller Parameters](#ingress-controller-parameters)
@@ -182,6 +183,29 @@ Kong can be configured via two methods:
   This is the traditional method of running and configuring Kong.
   By default, the Admin API of Kong is not exposed as a Service. This
   can be controlled via `admin.enabled` and `env.admin_listen` parameters.
+
+### Hybrid mode
+
+Kong supports [hybrid mode deployments](https://docs.konghq.com/2.0.x/hybrid-mode/)
+as of Kong 2.0.0. These deployments split Kong nodes into control plane nodes,
+which provide the admin API and interact with the database, and data plane
+nodes, which provide the proxy and receive configuration from control plane
+nodes.
+
+The chart does not yet support deploying control and data plane nodes in a
+single release. Users should create separate releases for each node type, i.e.
+separate control and data plane values.yamls that are installed separately.
+
+* If `.Values.env.role="control_plane"`, the release will create a Service
+  named `RELEASE-NAME-kong-cluster`.
+* Cluster certificates are not yet generated automatically. You must create a
+  certificate/key pair from a local instance, create a Secret containing them,
+  add the Secret to `.Values.secretVolumes`, and add
+  `cluster_cert`/`cluster_cert_key` values indicating its location under
+  `/etc/secrets` to `env`.
+* Note that data plane nodes do not default to using the default port (8005)
+  for `cluster_control_plane`. You should use `RELEASE-NAME-kong-cluster:8005`
+  as the `cluster_control_plane` value if using the default port.
 
 ## Configuration
 
